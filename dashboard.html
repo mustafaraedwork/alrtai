@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alrt AI</title>
+    <link rel="icon" type="image/x-icon" href="/static/logo.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+
+        .glass-panel {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .status-dot {
+            height: 12px;
+            width: 12px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .status-green {
+            background-color: #10B981;
+            box-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
+        }
+
+        .status-yellow {
+            background-color: #F59E0B;
+            box-shadow: 0 0 8px rgba(245, 158, 11, 0.4);
+        }
+
+        .status-red {
+            background-color: #EF4444;
+            box-shadow: 0 0 8px rgba(239, 68, 68, 0.4);
+        }
+
+        .status-grey {
+            background-color: #9CA3AF;
+        }
+
+        .editable-label:focus {
+            outline: 2px solid #3B82F6;
+            background: #EFF6FF;
+            border-radius: 4px;
+            padding: 2px 4px;
+        }
+
+        .tooltip {
+            position: relative;
+            display: inline-block;
+        }
+
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 200px;
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 5px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -100px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 0.75rem;
+            line-height: 1.2;
+            pointer-events: none;
+        }
+
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .animate-fade-in {
+            animation: fadeIn 0.2s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.98);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-radius: 50%;
+            border-top: 3px solid #3b82f6;
+            width: 16px;
+            height: 16px;
+            -webkit-animation: spin 1s linear infinite;
+            /* Safari */
+            animation: spin 1s linear infinite;
+            display: inline-block;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body class="p-6">
+
+    <div class="max-w-[90rem] mx-auto space-y-6">
+
+        <!-- Header & Add Target -->
+        <div class="glass-panel p-6 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div>
+                <div class="flex items-center gap-3">
+                    <img src="/static/logo.png" alt="Logo" class="h-10 w-10 rounded object-contain">
+                    <div>
+                        <h1 class="text-3xl font-bold text-gray-800 tracking-tight">Alrt AI <span
+                                class="text-blue-600 text-xs align-top uppercase tracking-widest">Enterprise</span></h1>
+                    </div>
+                </div>
+                <p class="text-gray-500 text-sm">Monitor business posting activity & churn risk.</p>
+                <div id="welcomeUser" class="text-xs text-blue-500 font-semibold mt-1"></div>
+            </div>
+
+            <div class="flex gap-2 w-full md:w-auto items-center">
+                <button onclick="logout()"
+                    class="text-red-400 hover:text-red-600 font-medium px-4 py-2 text-sm transition-colors mr-2">
+                    Logout
+                </button>
+                <button onclick="openBulkModal()"
+                    class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium px-4 py-2 rounded-lg transition-colors border border-gray-300 text-sm">
+                    Bulk Import
+                </button>
+                <div class="flex gap-2 w-full md:w-auto">
+                    <input type="text" id="newTargetInput" placeholder="Enter Instagram Username"
+                        class="border border-gray-300 rounded-lg px-4 py-2 w-full md:w-64 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+                    <button onclick="addTarget()"
+                        class="bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 py-2 rounded-lg transition-colors text-sm">
+                        Add Target
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4" id="statsGrid"></div>
+
+        <!-- Filters Toolbar -->
+        <div class="glass-panel p-4 flex flex-col md:flex-row gap-4 items-center justify-between">
+            <div class="flex gap-4 items-center w-full md:w-auto">
+                <div class="flex items-center gap-2">
+                    <span class="text-xs font-semibold text-gray-500 uppercase">Filter Status:</span>
+                    <select id="statusFilter" onchange="applyFilters()"
+                        class="border border-gray-300 rounded px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="ALL">All Statuses</option>
+                        <option value="GREEN">🟢 Opportunities (Green)</option>
+                        <option value="YELLOW">🟡 Warnings (Yellow)</option>
+                        <option value="RED">⚪ Active (Grey)</option>
+                    </select>
+                </div>
+                <!-- Multi-select Lead Status Filter -->
+                <div class="relative">
+                    <button onclick="toggleLeadStatusDropdown()"
+                        class="border border-gray-300 rounded px-3 py-1 text-sm bg-white hover:bg-gray-50 flex items-center gap-2">
+                        <span class="text-xs font-semibold text-gray-500 uppercase">Lead Status:</span>
+                        <span id="leadStatusLabel" class="text-gray-700">All Selected</span>
+                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7">
+                            </path>
+                        </svg>
+                    </button>
+                    <div id="leadStatusDropdown"
+                        class="hidden absolute top-full left-0 mt-1 w-56 bg-white border border-gray-200 rounded-lg shadow-xl z-50 p-2">
+                        <div class="flex flex-col gap-1 max-h-60 overflow-y-auto" id="leadStatusOptions">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2 flex-grow md:flex-grow-0">
+                    <span class="text-xs font-semibold text-gray-500 uppercase">Search Tag:</span>
+                    <input type="text" id="tagSearch" onkeyup="applyFilters()" placeholder="e.g. Restaurant..."
+                        class="border border-gray-300 rounded px-3 py-1 text-sm w-full md:w-48 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+            </div>
+            <div class="text-xs text-gray-400" id="resultCount">Showing all items</div>
+        </div>
+
+        <!-- Main Table -->
+        <div class="glass-panel overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead class="bg-gray-50 text-gray-600 text-xs uppercase tracking-wider font-semibold border-b">
+                        <tr>
+                            <th class="px-4 py-4 cursor-pointer hover:text-blue-600 select-none"
+                                onclick="sortTable('status_signal')">Status ↕</th>
+                            <th class="px-4 py-4 cursor-pointer hover:text-blue-600 select-none"
+                                onclick="sortTable('username')">Client ↕</th>
+                            <th class="px-4 py-4 cursor-pointer hover:text-blue-600 select-none"
+                                onclick="sortTable('lead_status')">Lead Status ↕</th>
+                            <th class="px-4 py-4 cursor-pointer hover:text-blue-600 select-none"
+                                onclick="sortTable('notes')">Notes ↕</th>
+                            <th class="px-4 py-4 cursor-pointer hover:text-blue-600 select-none"
+                                onclick="sortTable('ads_count')">FB Ads ↕</th>
+                            <th class="px-4 py-4 cursor-pointer hover:text-blue-600 select-none"
+                                onclick="sortTable('followers_count')">Metrics ↕</th>
+                            <th class="px-4 py-4 cursor-pointer hover:text-blue-600 select-none"
+                                onclick="sortTable('days_inactive')">Inactive ↕</th>
+                            <th class="px-4 py-4 cursor-pointer hover:text-blue-600 select-none"
+                                onclick="sortTable('last_post_date')">Last Post ↕</th>
+                            <th class="px-4 py-4 cursor-pointer hover:text-blue-600 select-none"
+                                onclick="sortTable('created_at')">Added ↕</th>
+                            <th class="px-4 py-4 text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="clientsTableBody" class="text-gray-700 text-sm divide-y divide-gray-100"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- BULK ADD MODAL -->
+    <div id="bulkModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="glass-panel p-6 w-full max-w-lg mx-4 animate-fade-in">
+            <h2 class="text-xl font-bold text-gray-800 mb-2">Bulk Add Targets</h2>
+            <p class="text-gray-500 text-sm mb-4">Paste usernames (one per line or comma separated). Max 50.</p>
+            <textarea id="bulkInput" rows="10" placeholder="username1&#10;username2&#10;username3..."
+                class="border border-gray-300 rounded-lg px-4 py-3 w-full mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm font-mono"></textarea>
+            <div class="flex justify-between items-center">
+                <span id="bulkCount" class="text-xs text-gray-500">0 / 50</span>
+                <div class="flex gap-2">
+                    <button onclick="closeBulkModal()"
+                        class="px-4 py-2 text-gray-600 hover:text-gray-800 font-medium text-sm">Cancel</button>
+                    <button onclick="submitBulk()"
+                        class="bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-lg text-sm transition-colors">Import
+                        Targets</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Link FB Modal -->
+    <div id="fbModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="glass-panel p-6 w-full max-w-md mx-4 animate-fade-in">
+            <h2 class="text-xl font-bold text-gray-800 mb-2">Check Facebook Ads</h2>
+            <p class="text-gray-500 text-sm mb-4">Enter a Facebook Page Link or Name.</p>
+            <input type="text" id="fbInput" placeholder="e.g. https://facebook.com/page OR Page Name"
+                class="border border-gray-300 rounded-lg px-4 py-3 w-full mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm text-sm">
+            <input type="hidden" id="fbTargetUsername">
+            <div class="flex justify-end gap-2">
+                <button onclick="closeFbModal()"
+                    class="px-4 py-2 text-gray-600 hover:text-gray-800 font-medium text-sm">Cancel</button>
+                <button onclick="saveFbLink()" id="fbSubmitBtn"
+                    class="bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-lg text-sm transition-colors flex items-center gap-2"><span>Search
+                        & Link</span></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Client Modal -->
+    <div id="editModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="glass-panel p-6 w-full max-w-lg mx-4 animate-fade-in">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">Edit Client Details</h2>
+            <div class="grid grid-cols-2 gap-4">
+                <div><label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Username</label><input
+                        type="text" id="editUsername" readonly
+                        class="bg-gray-100 border border-gray-300 rounded-lg px-3 py-2 w-full mb-4 text-gray-500 cursor-not-allowed">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Lead Status</label>
+                    <select id="editLeadStatus"
+                        class="border border-gray-300 rounded-lg px-3 py-2 w-full mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+                        <option value="NEW_LEAD">New Lead</option>
+                        <option value="CONTACTED">Contacted</option>
+                        <option value="IN_DISCUSSION">In Discussion</option>
+                        <option value="CLIENT">Client</option>
+                        <option value="NOT_INTERESTED">Not Interested</option>
+                    </select>
+                </div>
+            </div>
+            <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Custom Label / Tag</label>
+            <input type="text" id="editLabel" placeholder="e.g. Restaurant"
+                class="border border-gray-300 rounded-lg px-3 py-2 w-full mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+            <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Facebook Page URL</label>
+            <input type="text" id="editFbUrl" placeholder="https://www.facebook.com/..."
+                class="border border-gray-300 rounded-lg px-3 py-2 w-full mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+            <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Notes</label>
+            <textarea id="editNotes" rows="4" placeholder="Enter full notes here..."
+                class="border border-gray-300 rounded-lg px-3 py-2 w-full mb-6 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"></textarea>
+            <div class="flex justify-end gap-2">
+                <button onclick="closeEditModal()"
+                    class="px-4 py-2 text-gray-600 hover:text-gray-800 font-medium text-sm">Cancel</button>
+                <button onclick="saveClientEdit()"
+                    class="bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-lg text-sm transition-colors">Save
+                    Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteModal"
+        class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 animate-fade-in">
+        <div
+            class="bg-white rounded-2xl p-8 w-full max-w-sm mx-4 shadow-2xl text-center transform transition-all scale-100">
+            <div class="flex justify-center mb-4">
+                <div class="bg-red-100 p-3 rounded-full">
+                    <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z">
+                        </path>
+                    </svg>
+                </div>
+            </div>
+            <h2 class="text-xl font-bold text-gray-900 mb-2">Delete Account</h2>
+            <p class="text-gray-500 text-sm mb-6">You're going to delete the tracking for <span id="deleteTargetName"
+                    class="font-bold text-gray-800"></span>. This action cannot be undone.</p>
+
+            <div class="flex gap-3 justify-center">
+                <button onclick="closeDeleteModal()"
+                    class="px-5 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-xl text-sm transition-colors">
+                    No, keep it.
+                </button>
+                <button onclick="confirmDelete()"
+                    class="px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl text-sm shadow-lg shadow-red-500/30 transition-all transform hover:scale-105">
+                    Yes, Delete!
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let allClients = [];
+        let currentSort = { key: 'created_at', order: 'desc' };
+        const STATUS_COLORS = {
+            'NEW_LEAD': 'text-gray-500 bg-gray-100', 'CONTACTED': 'text-blue-600 bg-blue-50',
+            'IN_DISCUSSION': 'text-yellow-600 bg-yellow-50', 'CLIENT': 'text-green-600 bg-green-50', 'NOT_INTERESTED':
+                'text-red-500 bg-red-50'
+        };
+        const STATUS_LABELS = {
+            'NEW_LEAD': 'New Lead', 'CONTACTED': 'Contacted', 'IN_DISCUSSION': 'In Discussion',
+            'CLIENT': 'Client', 'NOT_INTERESTED': 'Not Interested'
+        };
+
+        // Auth Check
+        async function checkAuth() {
+            try {
+                const res = await fetch('/api/me');
+                if (res.status === 401) {
+                    window.location.href = '/login';
+                    return false;
+                }
+                const data = await res.json();
+                document.getElementById('welcomeUser').innerText = `Welcome, ${data.username}`;
+                return true;
+            } catch (e) {
+                console.error("Auth Check Error", e);
+                return false;
+            }
+        }
+
+        async function logout() {
+            await fetch('/logout');
+            window.location.href = '/login';
+        }
+
+        async function loadDashboard() {
+            try {
+                const res = await fetch('/data/dashboard');
+                if (res.status === 401) {
+                    window.location.href = '/login';
+                    return;
+                }
+                const data = await res.json();
+                allClients = data.clients_list;
+                renderStats(data.stats);
+                applyFilters();
+                const hasActive = data.clients_list.some(c => ['queued', 'processing'].includes(c.last_check_status));
+                const hasPending = data.clients_list.some(c => c.last_check_status === 'pending');
+                const interval = (hasActive || hasPending) ? 5000 : 30000;
+                setTimeout(loadDashboard, interval);
+            } catch (e) {
+                console.error("Load Error", e);
+            }
+        }
+
+        // Initialize
+        checkAuth().then(ok => {
+            if (ok) {
+                initializeLeadStatusFilter();
+                loadDashboard();
+            }
+        });
+
+        // --- Lead Status Filter Logic ---
+        let selectedLeadStatuses = [];
+
+        function initializeLeadStatusFilter() {
+            const container = document.getElementById('leadStatusOptions');
+            const keys = Object.keys(STATUS_LABELS);
+            selectedLeadStatuses = [...keys]; // Default all selected
+
+            container.innerHTML = keys.map(k => `
+                <label class="flex items-center gap-2 px-2 py-1.5 hover:bg-gray-100 rounded cursor-pointer">
+                    <input type="checkbox" value="${k}" checked onchange="toggleLeadStatus('${k}')"
+                        class="form-checkbox h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500">
+                    <span class="text-sm text-gray-700">${STATUS_LABELS[k]}</span>
+                </label>
+            `).join('');
+            updateLeadStatusLabel();
+
+            // Close dropdown when clicking outside
+            document.addEventListener('click', function (event) {
+                const dropdown = document.getElementById('leadStatusDropdown');
+                const button = document.getElementById('leadStatusLabel').parentElement;
+                if (!dropdown.contains(event.target) && !button.contains(event.target)) {
+                    dropdown.classList.add('hidden');
+                }
+            });
+        }
+
+        function toggleLeadStatusDropdown() {
+            document.getElementById('leadStatusDropdown').classList.toggle('hidden');
+        }
+
+        function toggleLeadStatus(status) {
+            const index = selectedLeadStatuses.indexOf(status);
+            if (index > -1) {
+                selectedLeadStatuses.splice(index, 1);
+            } else {
+                selectedLeadStatuses.push(status);
+            }
+            updateLeadStatusLabel();
+            applyFilters();
+        }
+
+        function updateLeadStatusLabel() {
+            const allCount = Object.keys(STATUS_LABELS).length;
+            const label = document.getElementById('leadStatusLabel');
+
+            if (selectedLeadStatuses.length === 0) {
+                label.innerText = "None"; // Or "Show None"
+            } else if (selectedLeadStatuses.length === allCount) {
+                label.innerText = "All Selected";
+            } else {
+                label.innerText = `${selectedLeadStatuses.length} Selected`;
+            }
+        }
+
+        function sortTable(key) {
+            if (currentSort.key === key) currentSort.order = currentSort.order === 'asc' ? 'desc' : 'asc';
+            else { currentSort.key = key; currentSort.order = 'desc'; }
+            applyFilters();
+        }
+
+        function applyFilters() {
+            const statusFilter = document.getElementById('statusFilter').value;
+            const tagQuery = document.getElementById('tagSearch').value.toLowerCase();
+
+            let filtered = allClients.filter(client => {
+                // 1. CRM Status Signal Filter
+                if (statusFilter !== 'ALL' && client.status_signal !== statusFilter) return false;
+
+                // 2. Lead Status Multi-Select Filter
+                // If selectedLeadStatuses is undefined (before init) treat as all.
+                if (typeof selectedLeadStatuses !== 'undefined') {
+                    // If client has no lead_status, treat as 'NEW_LEAD' default or handle gracefully
+                    const s = client.lead_status || 'NEW_LEAD';
+                    if (!selectedLeadStatuses.includes(s)) return false;
+                }
+
+                // 3. Text Search (Tag/Username/Notes)
+                if (tagQuery) {
+                    const label = (client.custom_label || "").toLowerCase();
+                    const username = client.username.toLowerCase();
+                    const notes = (client.notes || "").toLowerCase();
+                    if (!label.includes(tagQuery) && !username.includes(tagQuery) && !notes.includes(tagQuery)) return false;
+                }
+                return true;
+            });
+            filtered.sort((a, b) => {
+                let valA = a[currentSort.key];
+                let valB = b[currentSort.key];
+                if (valA === undefined || valA === null) valA = "";
+                if (valB === undefined || valB === null) valB = "";
+                if (['followers_count', 'avg_posting_interval', 'days_inactive', 'ads_count'].includes(currentSort.key)) {
+                    valA =
+                        Number(valA || 0); valB = Number(valB || 0);
+                }
+                if (currentSort.key === 'status_signal') {
+                    const map = { 'RED': 3, 'YELLOW': 2, 'GREEN': 1, 'GREY': 0 }; valA =
+                        map[valA] || 0; valB = map[valB] || 0;
+                }
+                if (currentSort.key === 'lead_status') {
+                    const map = {
+                        'NEW_LEAD': 0, 'CONTACTED': 1, 'IN_DISCUSSION': 2, 'CLIENT':
+                            3, 'NOT_INTERESTED': 4
+                    }; valA = map[valA] !== undefined ? map[valA] : -1; valB = map[valB] !== undefined ?
+                        map[valB] : -1;
+                }
+                if (typeof valA === 'string') valA = valA.toLowerCase();
+                if (typeof valB === 'string') valB = valB.toLowerCase();
+                if (valA < valB) return currentSort.order === 'asc' ? -1 : 1; if (valA > valB) return currentSort.order === 'asc' ? 1 :
+                    -1;
+                return 0;
+            });
+            renderTable(filtered);
+            updateSortIcons();
+            document.getElementById('resultCount').innerText = `Showing ${filtered.length} of ${allClients.length} items`;
+        }
+
+        function updateSortIcons() {
+            document.querySelectorAll('th').forEach(th => {
+                if (th.innerText.includes('↕') || th.innerText.includes('↑') ||
+                    th.innerText.includes('↓')) th.innerText = th.innerText.replace(/[↑↓↕]/, '↕');
+            });
+            const arrow = currentSort.order === 'asc' ? '↑' : '↓';
+            const headers = Array.from(document.querySelectorAll('th'));
+            const activeHeader = headers.find(th => th.getAttribute('onclick')?.includes(`'${currentSort.key}'`));
+            if (activeHeader) activeHeader.innerText = activeHeader.innerText.replace('↕', arrow);
+        }
+
+        function renderStats(stats) {
+            const items = [
+                { label: 'Total Tracked', val: stats.total_tracked, color: 'blue' },
+                { label: 'Opportunities (Green)', val: stats.green_opportunities, color: 'green' },
+                { label: 'Warnings (Yellow)', val: stats.yellow_warnings, color: 'yellow' },
+                { label: 'Queued Jobs', val: document.getElementById('queuedCount')?.innerText || '0', color: 'gray' }
+            ];
+
+            document.getElementById('statsGrid').innerHTML = items.map(i =>
+                `<div class="glass-panel p-4 border-l-4 border-${i.color}-500">
+                    <p class="text-gray-500 text-xs font-semibold uppercase">${i.label}</p>
+                    <p class="text-2xl font-bold text-gray-800">${i.val}</p>
+                </div>`
+            ).join('');
+        }
+
+
+        async function updateLeadStatus(username, newStatus) {
+            const client = allClients.find(c => c.username === username);
+            if (client) client.lead_status = newStatus;
+            await fetch('/update_client_crm', {
+                method: 'PUT', headers: { 'Content-Type': 'application/json' }, body:
+                    JSON.stringify({ username: username, lead_status: newStatus })
+            });
+            applyFilters();
+        }
+
+        function renderTable(clients) {
+            const tbody = document.getElementById('clientsTableBody');
+            const queued = clients.filter(c => ['queued', 'processing', 'pending'].includes(c.last_check_status)).length;
+            if (document.getElementById('statsGrid').children[3])
+                document.getElementById('statsGrid').children[3].children[1].innerText = queued;
+            tbody.innerHTML = clients.map(client => {
+                let statusDotClass = 'status-grey';
+                if (client.status_signal === 'GREEN') statusDotClass = 'status-green';
+                if (client.status_signal === 'YELLOW') statusDotClass = 'status-yellow';
+                if (client.status_signal === 'RED') statusDotClass = 'status-grey';
+
+                let statusHtml = `<span class="status-dot ${statusDotClass}"></span>`;
+
+                // SPINNER LOGIC
+                if (['queued', 'processing', 'pending'].includes(client.last_check_status)) {
+                    statusHtml = `<div class="spinner text-blue-500" title="Loading..."></div>`;
+                }
+
+                if (client.last_check_status === 'failed') statusHtml = `<span
+            class="text-red-500 text-xs font-bold" title="${client.last_error_message || 'Error'}">ERR</span>`;
+                let adsHtml = '';
+                if (client.ads_status === 'ACTIVE') adsHtml = `<div class="flex items-center gap-2"><span
+                class="text-green-600 font-bold text-xs">✓ Active (${client.ads_count || 0})</span></div>`;
+                else if (client.ads_status === 'INACTIVE') adsHtml = `<div class="flex items-center gap-2"><span
+                class="text-red-500 font-bold text-xs">✕ 0 Ads</span></div>`;
+                else if (client.ads_status === 'CHECKING...') adsHtml = `<div class="flex items-center gap-2"><div class="spinner" style="width:12px;height:12px;border-width:2px;border-top-color:#3b82f6;"></div> <span class="text-xs text-gray-500">Checking...</span></div>`;
+                else adsHtml = `<span class="text-blue-500 hover:underline text-xs cursor-pointer"
+            onclick="openFbModal('${client.username}')">Link FB</span>`;
+                const currentStatus = client.lead_status || 'NEW_LEAD';
+                const statusColor = STATUS_COLORS[currentStatus] || STATUS_COLORS['NEW_LEAD'];
+                const optionsHtml = Object.keys(STATUS_LABELS).map(k => `<option value="${k}" ${k === currentStatus ? 'selected'
+                    : ''}>${STATUS_LABELS[k]}</option>`).join('');
+                const statusDropdown = `<select onchange="updateLeadStatus('${client.username}', this.value)"
+            class="text-xs font-semibold rounded px-2 py-1 border-0 cursor-pointer focus:ring-2 focus:ring-blue-500 ${statusColor} transition-colors">${optionsHtml}</select>`;
+                const fullNotes = client.notes || "";
+                let notesDisplay = '<span class="text-gray-400 italic text-xs">No notes</span>';
+                if (fullNotes) {
+                    const truncated = fullNotes.length > 20 ? fullNotes.substring(0, 20) + '...' : fullNotes;
+                    notesDisplay = `<div class="tooltip text-xs text-gray-700">${truncated}<span
+                class="tooltiptext">${fullNotes}</span></div>`;
+                }
+                return `<tr class="hover:bg-gray-50 transition-colors group">
+            <td class="px-4 py-4">${statusHtml}</td>
+            <td class="px-4 py-4">
+                <div class="flex flex-col">
+                    <a href="https://instagram.com/${client.username}" target="_blank"
+                        class="font-bold text-gray-900 hover:text-blue-600 text-sm">@${client.username}</a>
+                    ${client.custom_label
+                        ? `<span class="text-xs text-gray-500 hover:text-blue-600 cursor-pointer" onclick="openEditModal('${client.username}')" title="Edit Tag">🏷️ ${client.custom_label}</span>`
+                        : `<span class="text-[10px] text-blue-400 hover:text-blue-600 cursor-pointer font-medium" onclick="openEditModal('${client.username}')">+ Add Tag</span>`
+                    }
+                </div>
+            </td>
+            <td class="px-4 py-4">${statusDropdown}</td>
+            <td class="px-4 py-4 cursor-pointer hover:bg-gray-100 rounded ${fullNotes ? 'bg-purple-100' : ''}"
+                onclick="openEditModal('${client.username}')">${notesDisplay}</td>
+            <td class="px-4 py-4">${adsHtml}</td>
+            <td class="px-4 py-4 text-xs font-mono text-gray-600">${(client.followers_count || 0).toLocaleString()}
+                <span class="text-gray-400">foll</span></td>
+            <td class="px-4 py-4"><span
+                    class="text-xs font-bold ${client.days_inactive > (client.avg_posting_interval || 0) + 3 ? 'text-red-600' : 'text-gray-700'}">${client.days_inactive}d</span><span
+                    class="text-xs text-gray-400"> / ${client.avg_posting_interval}d avg</span></td>
+            <td class="px-4 py-4 text-xs text-gray-500" title="Last Crawl: ${client.last_check_date ? new Date(client.last_check_date).toLocaleString() : 'Never'}">${client.last_post_date || '-'}</td>
+            <td class="px-4 py-4 text-xs text-gray-400">${client.created_at ? new
+                        Date(client.created_at).toLocaleDateString('en-GB') : '-'}</td>
+            <td class="px-4 py-4 text-right"><button onclick="openEditModal('${client.username}')"
+                    class="text-gray-500 hover:text-gray-700 mr-2 text-xs font-semibold">EDIT</button><button
+                    onclick="refreshTarget('${client.username}')"
+                    class="text-blue-500 hover:text-blue-700 mr-2 text-xs font-semibold">CHK</button><button
+                    onclick="deleteTarget('${client.username}')"
+                    class="text-red-400 hover:text-red-600 text-xs font-semibold">DEL</button></td>
+        </tr>`;
+            }).join('');
+        }
+
+        async function addTarget() {
+            const input = document.getElementById('newTargetInput');
+            const username = input.value.trim();
+            if (!username) return;
+            const optimisticClient = {
+                username: username, status_signal: 'RED', last_check_status: 'pending', lead_status:
+                    'NEW_LEAD', custom_label: '', created_at: new Date().toISOString()
+            };
+            allClients.unshift(optimisticClient); applyFilters(); input.value = '';
+            await fetch(`/add_target?username=${username}`, { method: 'POST' }); loadDashboard();
+        }
+        let targetToDelete = null;
+
+        function deleteTarget(username) {
+            targetToDelete = username;
+            document.getElementById('deleteTargetName').innerText = `@${username}`;
+            document.getElementById('deleteModal').classList.remove('hidden');
+        }
+
+        function closeDeleteModal() {
+            document.getElementById('deleteModal').classList.add('hidden');
+            targetToDelete = null;
+        }
+
+        async function confirmDelete() {
+            if (!targetToDelete) return;
+            const username = targetToDelete;
+            closeDeleteModal();
+
+            // Optimistic removal
+            const row = [...document.querySelectorAll('tr')].find(tr => tr.innerHTML.includes(username));
+            if (row) row.style.opacity = '0.5';
+
+            await fetch(`/delete_target?username=${username}`, { method: 'DELETE' });
+            loadDashboard();
+        }
+        async function refreshTarget(username) {
+            const client = allClients.find(c => c.username === username);
+            if (client) {
+                client.last_check_status = 'pending';
+                applyFilters();
+            }
+            await fetch(`/refresh_target?username=${username}`);
+            loadDashboard();
+        }
+
+        // --- BULK IMPORT ---
+        function openBulkModal() {
+            document.getElementById('bulkModal').classList.remove('hidden');
+            document.getElementById('bulkInput').value = '';
+            document.getElementById('bulkCount').innerText = '0 / 50';
+            document.getElementById('bulkInput').focus();
+        }
+        function closeBulkModal() { document.getElementById('bulkModal').classList.add('hidden'); }
+
+        document.getElementById('bulkInput').addEventListener('input', function () {
+            const lines = this.value.split(/[\n,]+/).map(l => l.trim()).filter(l => l);
+            document.getElementById('bulkCount').innerText = `${Math.min(lines.length, 50)} / 50`;
+            if (lines.length > 50) document.getElementById('bulkCount').classList.add('text-red-500');
+            else document.getElementById('bulkCount').classList.remove('text-red-500');
+        });
+
+        async function submitBulk() {
+            const raw = document.getElementById('bulkInput').value;
+            // Split by newline or comma, trim, filter empty
+            let usernames = raw.split(/[\n,]+/).map(s => s.trim()).filter(s => s);
+
+            // Filter header "user" "username"
+            usernames = usernames.filter(u => !['user', 'username', 'users', 'name'].includes(u.toLowerCase()));
+
+            if (usernames.length === 0) return alert("Please enter at least one username.");
+
+            if (usernames.length > 50) {
+                alert(`Too many users! You have ${usernames.length}. Please limit to 50.`);
+                return; // Strict limit
+            }
+
+            closeBulkModal();
+
+            const btn = document.querySelector('button[onclick="openBulkModal()"]');
+            const originalText = btn.innerText;
+            btn.innerText = "Importing...";
+            btn.disabled = true;
+
+            try {
+                const res = await fetch('/bulk_add_targets', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ usernames: usernames })
+                });
+                const result = await res.json();
+                alert(result.message);
+                loadDashboard();
+            } catch (e) {
+                alert("Import failed: " + e);
+            } finally {
+                btn.innerText = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        // --- MODALS ---
+        function openEditModal(username) {
+            const client = allClients.find(c => c.username === username); if (!client) return;
+            document.getElementById('editUsername').value = client.username;
+            document.getElementById('editLeadStatus').value = client.lead_status || 'NEW_LEAD';
+            document.getElementById('editLabel').value = client.custom_label || '';
+            document.getElementById('editFbUrl').value = client.facebook_page_url || '';
+            document.getElementById('editNotes').value = client.notes || '';
+            document.getElementById('editModal').classList.remove('hidden');
+        }
+        function closeEditModal() { document.getElementById('editModal').classList.add('hidden'); }
+        async function saveClientEdit() {
+            const username = document.getElementById('editUsername').value;
+            const label = document.getElementById('editLabel').value.trim();
+            const fbUrl = document.getElementById('editFbUrl').value.trim();
+            const status = document.getElementById('editLeadStatus').value;
+            const notes = document.getElementById('editNotes').value;
+            closeEditModal();
+            const client = allClients.find(c => c.username === username);
+            if (client) {
+                client.custom_label = label; client.facebook_page_url = fbUrl; client.lead_status = status;
+                client.notes = notes; if (fbUrl && !client.ads_status) client.ads_status = "CHECKING..."; applyFilters();
+            }
+            const p1 = fetch(`/update_label?username=${username}&label=${encodeURIComponent(label)}`, { method: 'PUT' });
+            let p2 = Promise.resolve(); if (fbUrl) p2 =
+                fetch(`/link_facebook?username=${username}&fb_url=${encodeURIComponent(fbUrl)}`, { method: 'PUT' });
+            const p3 = fetch('/update_client_crm', {
+                method: 'PUT', headers: { 'Content-Type': 'application/json' }, body:
+                    JSON.stringify({ username: username, lead_status: status, notes: notes })
+            });
+            await Promise.all([p1, p2, p3]); loadDashboard();
+        }
+        function openFbModal(username) {
+            document.getElementById('fbTargetUsername').value = username;
+            document.getElementById('fbInput').value = ''; document.getElementById('fbModal').classList.remove('hidden');
+            document.getElementById('fbInput').focus();
+        }
+        function closeFbModal() { document.getElementById('fbModal').classList.add('hidden'); }
+        async function saveFbLink() {
+            const username = document.getElementById('fbTargetUsername').value;
+            const inputVal = document.getElementById('fbInput').value.trim();
+            if (!inputVal) return;
+
+            closeFbModal();
+
+            // Optimistic update
+            const client = allClients.find(c => c.username === username);
+            if (client) {
+                client.ads_status = 'CHECKING...';
+                applyFilters(); // Re-render table immediately
+            }
+
+            await fetch(`/link_facebook?username=${username}&fb_url=${encodeURIComponent(inputVal)}`, { method: 'PUT' });
+            loadDashboard();
+        }
+
+        loadDashboard();
+    </script>
+</body>
+
+</html>
