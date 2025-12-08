@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Client Details - Alrt AI</title>
+    <link rel="icon" type="image/x-icon" href="/static/logo.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+
+        .glass-panel {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .heatmap-day {
+            width: 12px;
+            height: 12px;
+            border-radius: 2px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .heatmap-day:hover {
+            transform: scale(1.2);
+            outline: 2px solid #3B82F6;
+        }
+
+        .heatmap-day.unavailable {
+            background-color: #f3f4f6;
+        }
+
+        .heatmap-day.no-activity {
+            background-color: #E5E7EB;
+        }
+
+        .heatmap-day.level-1 {
+            background-color: #C7E6FF;
+        }
+
+        .heatmap-day.level-2 {
+            background-color: #7CC5FF;
+        }
+
+        .heatmap-day.level-3 {
+            background-color: #3B9EFF;
+        }
+
+        .heatmap-day.level-4 {
+            background-color: #0077E6;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-radius: 50%;
+            border-top: 3px solid #3b82f6;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="p-6">
+    <div class="max-w-[90rem] mx-auto space-y-6">
+
+        <!-- Header -->
+        <div class="glass-panel p-6">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <button onclick="goBack()" class="text-gray-600 hover:text-gray-800">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                        </svg>
+                    </button>
+                    <img id="profilePic" src="" alt="" class="h-16 w-16 rounded-full object-cover" referrerpolicy="no-referrer" crossorigin="anonymous">
+                    <div>
+                        <h1 id="username" class="text-2xl font-bold text-gray-800">@username</h1>
+                        <p class="text-sm text-gray-500">Client Analytics & Archive</p>
+                    </div>
+                </div>
+                <div>
+                    <span id="trackingSince" class="text-xs text-gray-500">Tracking since: ...</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loadingState" class="glass-panel p-12 flex flex-col items-center justify-center">
+            <div class="spinner"></div>
+            <p class="mt-4 text-gray-600">Loading client data...</p>
+        </div>
+
+        <!-- Main Content (Hidden until loaded) -->
+        <div id="mainContent" class="hidden space-y-6">
+
+            <!-- Statistics Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div class="glass-panel p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-gray-500 uppercase font-medium">Followers</p>
+                            <p id="followers" class="text-3xl font-bold text-gray-800 mt-2">-</p>
+                        </div>
+                        <div class="bg-blue-100 p-3 rounded-full">
+                            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass-panel p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-gray-500 uppercase font-medium">Engagement Rate</p>
+                            <p id="engagement" class="text-3xl font-bold text-gray-800 mt-2">-%</p>
+                        </div>
+                        <div class="bg-green-100 p-3 rounded-full">
+                            <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass-panel p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-gray-500 uppercase font-medium">Avg Likes</p>
+                            <p id="avgLikes" class="text-3xl font-bold text-gray-800 mt-2">-</p>
+                        </div>
+                        <div class="bg-red-100 p-3 rounded-full">
+                            <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass-panel p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-gray-500 uppercase font-medium">Avg Comments</p>
+                            <p id="avgComments" class="text-3xl font-bold text-gray-800 mt-2">-</p>
+                        </div>
+                        <div class="bg-purple-100 p-3 rounded-full">
+                            <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass-panel p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-gray-500 uppercase font-medium">Posts/Day</p>
+                            <p id="postsPerDay" class="text-3xl font-bold text-gray-800 mt-2">-</p>
+                        </div>
+                        <div class="bg-yellow-100 p-3 rounded-full">
+                            <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass-panel p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-gray-500 uppercase font-medium">Posts Tracked</p>
+                            <p id="storiesArchived" class="text-3xl font-bold text-gray-800 mt-2">-</p>
+                        </div>
+                        <div class="bg-indigo-100 p-3 rounded-full">
+                            <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z"/>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Activity Heatmap -->
+            <div class="glass-panel p-6">
+                <h2 class="text-xl font-bold text-gray-800 mb-4">Activity Heatmap</h2>
+                <div class="overflow-x-auto">
+                    <div id="heatmap" class="inline-block"></div>
+                </div>
+                <div class="flex items-center justify-end gap-2 mt-4 text-xs text-gray-600">
+                    <span>Less</span>
+                    <div class="heatmap-day no-activity"></div>
+                    <div class="heatmap-day level-1"></div>
+                    <div class="heatmap-day level-2"></div>
+                    <div class="heatmap-day level-3"></div>
+                    <div class="heatmap-day level-4"></div>
+                    <span>More</span>
+                </div>
+            </div>
+
+            <!-- Analytics Chart -->
+            <div class="glass-panel p-6">
+                <h2 class="text-xl font-bold text-gray-800 mb-4">Engagement Trend (Last 30 Days)</h2>
+                <div id="chart"></div>
+            </div>
+
+            <!-- Posts Archive -->
+            <div class="glass-panel p-6">
+                <h2 class="text-xl font-bold text-gray-800 mb-4">Posts Archive</h2>
+                <div id="postsPreviewGrid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                    <!-- First 6 posts will be loaded here -->
+                </div>
+                <div class="text-center mt-4">
+                    <button id="viewMorePostsBtn" onclick="openPostsModal()" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg font-medium transition-colors">
+                        مشاهدة المزيد (View More)
+                    </button>
+                </div>
+            </div>
+
+            <!-- Stories Archive -->
+            <div class="glass-panel p-6">
+                <h2 class="text-xl font-bold text-gray-800 mb-4">Stories Archive</h2>
+                <div id="storiesPreviewGrid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                    <!-- First 6 stories will be loaded here -->
+                </div>
+                <div class="text-center mt-4">
+                    <button id="viewMoreStoriesBtn" onclick="openStoriesModal()" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg font-medium transition-colors">
+                        مشاهدة المزيد (View More)
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Posts Modal -->
+    <div id="postsModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50" style="display: none;">
+        <div class="bg-white rounded-xl shadow-2xl w-11/12 h-5/6 max-w-7xl overflow-hidden flex flex-col">
+            <!-- Modal Header -->
+            <div class="flex items-center justify-between p-6 border-b">
+                <h2 class="text-2xl font-bold text-gray-800">All Posts</h2>
+                <button onclick="closePostsModal()" class="text-gray-500 hover:text-gray-700 text-3xl font-bold leading-none">&times;</button>
+            </div>
+            <!-- Modal Content -->
+            <div class="flex-1 overflow-y-auto p-6">
+                <div id="postsModalGrid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                    <!-- All posts will be loaded here -->
+                </div>
+                <div class="text-center mt-6">
+                    <button id="loadMorePostsBtn" onclick="loadMorePosts()" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg font-medium transition-colors">
+                        عرض المزيد (Load More)
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stories Modal -->
+    <div id="storiesModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50" style="display: none;">
+        <div class="bg-white rounded-xl shadow-2xl w-11/12 h-5/6 max-w-7xl overflow-hidden flex flex-col">
+            <!-- Modal Header -->
+            <div class="flex items-center justify-between p-6 border-b">
+                <h2 class="text-2xl font-bold text-gray-800">All Stories</h2>
+                <button onclick="closeStoriesModal()" class="text-gray-500 hover:text-gray-700 text-3xl font-bold leading-none">&times;</button>
+            </div>
+            <!-- Modal Content -->
+            <div class="flex-1 overflow-y-auto p-6">
+                <div id="storiesModalGrid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                    <!-- All stories will be loaded here -->
+                </div>
+                <div class="text-center mt-6">
+                    <button id="loadMoreStoriesBtn" onclick="loadMoreStories()" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg font-medium transition-colors">
+                        عرض المزيد (Load More)
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const token = localStorage.getItem('access_token');
+        if (!token) {
+            window.location.href = '/login';
+        }
+
+        // Get client ID from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const clientId = urlParams.get('id');
+
+        if (!clientId) {
+            alert('No client ID provided');
+            window.location.href = '/dashboard';
+        }
+
+        let clientData = null;
+
+        async function loadClientData() {
+            try {
+                const response = await fetch(`/api/client/${clientId}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (!response.ok) throw new Error('Failed to load client');
+
+                const data = await response.json();
+                clientData = data.client;
+                const analytics = data.analytics;
+
+                // Update header
+                document.getElementById('username').textContent = '@' + clientData.username;
+                const profilePicUrl = clientData.profile_pic_url ? `/proxy/image?url=${encodeURIComponent(clientData.profile_pic_url)}` : '/static/default-avatar.png';
+                document.getElementById('profilePic').src = profilePicUrl;
+
+                if (clientData.tracking_started_at) {
+                    const date = new Date(clientData.tracking_started_at);
+                    document.getElementById('trackingSince').textContent = 'Tracking since: ' + date.toLocaleDateString();
+                }
+
+                // Update stats
+                if (analytics) {
+                    document.getElementById('followers').textContent = analytics.followers_count.toLocaleString();
+                    document.getElementById('engagement').textContent = analytics.engagement_rate + '%';
+                    document.getElementById('avgLikes').textContent = Math.round(analytics.avg_likes).toLocaleString();
+                    document.getElementById('avgComments').textContent = Math.round(analytics.avg_comments).toLocaleString();
+                    document.getElementById('postsPerDay').textContent = analytics.posts_per_day;
+                }
+
+                document.getElementById('storiesArchived').textContent = data.total_posts.toLocaleString();
+
+                // Show content, hide loading
+                document.getElementById('loadingState').classList.add('hidden');
+                document.getElementById('mainContent').classList.remove('hidden');
+
+                // Load heatmap, chart, posts preview, and stories preview
+                await loadHeatmap();
+                await loadAnalyticsChart();
+                await loadPostsPreview();
+                await loadStoriesPreview();
+
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to load client data');
+            }
+        }
+
+        async function loadHeatmap() {
+            try {
+                const currentYear = new Date().getFullYear();
+                const response = await fetch(`/api/client/${clientId}/heatmap?year=${currentYear}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                const data = await response.json();
+                renderHeatmap(data.activity_data, data.tracking_started_at);
+
+            } catch (error) {
+                console.error('Heatmap error:', error);
+            }
+        }
+
+        function renderHeatmap(activityData, trackingStartedAt) {
+            const heatmapDiv = document.getElementById('heatmap');
+            const trackingStart = trackingStartedAt ? new Date(trackingStartedAt) : null;
+            const today = new Date();
+            const oneYearAgo = new Date(today);
+            oneYearAgo.setFullYear(today.getFullYear() - 1);
+
+            // Create activity map
+            const activityMap = {};
+            activityData.forEach(day => {
+                activityMap[day.activity_date] = {
+                    stories: day.stories_count,
+                    posts: day.posts_count,
+                    total: day.stories_count + day.posts_count
+                };
+            });
+
+            // Generate 52 weeks grid
+            const weeks = [];
+            let currentDate = new Date(oneYearAgo);
+
+            for (let week = 0; week < 52; week++) {
+                const weekDays = [];
+                for (let day = 0; day < 7; day++) {
+                    const dateStr = currentDate.toISOString().split('T')[0];
+                    const activity = activityMap[dateStr] || { total: 0, stories: 0, posts: 0 };
+
+                    // Determine if this date is before tracking started
+                    const isUnavailable = trackingStart && currentDate < trackingStart;
+                    const isFuture = currentDate > today;
+
+                    let level = 'no-activity';
+                    if (isUnavailable || isFuture) {
+                        level = 'unavailable';
+                    } else if (activity.total > 0) {
+                        if (activity.total >= 10) level = 'level-4';
+                        else if (activity.total >= 6) level = 'level-3';
+                        else if (activity.total >= 3) level = 'level-2';
+                        else level = 'level-1';
+                    }
+
+                    weekDays.push({
+                        date: dateStr,
+                        level: level,
+                        count: activity.total,
+                        stories: activity.stories,
+                        posts: activity.posts
+                    });
+
+                    currentDate.setDate(currentDate.getDate() + 1);
+                }
+                weeks.push(weekDays);
+            }
+
+            // Render heatmap
+            heatmapDiv.innerHTML = weeks.map(week =>
+                `<div class="inline-flex flex-col gap-1 mr-1">
+                    ${week.map(day =>
+                        `<div class="heatmap-day ${day.level}"
+                             title="${day.date}: ${day.count} activities (${day.stories} stories, ${day.posts} posts)"
+                             onclick="viewDayActivity('${day.date}')"></div>`
+                    ).join('')}
+                </div>`
+            ).join('');
+        }
+
+        async function viewDayActivity(date) {
+            try {
+                const response = await fetch(`/api/client/${clientId}/activity/${date}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                const data = await response.json();
+
+                if (data.stories.length === 0 && data.posts.length === 0) {
+                    alert('No activity on ' + date);
+                    return;
+                }
+
+                let message = `Activity on ${date}:\n\n`;
+                message += `Stories: ${data.stories.length}\n`;
+                message += `Posts: ${data.posts.length}`;
+
+                alert(message);
+
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        async function loadAnalyticsChart() {
+            try {
+                const response = await fetch(`/api/client/${clientId}/analytics?days=30`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                const data = await response.json();
+                renderChart(data.analytics);
+
+            } catch (error) {
+                console.error('Chart error:', error);
+            }
+        }
+
+        function renderChart(analytics) {
+            if (!analytics || analytics.length === 0) {
+                document.getElementById('chart').innerHTML = '<p class="text-gray-500 text-center">No analytics data available yet</p>';
+                return;
+            }
+
+            const dates = analytics.map(a => a.snapshot_date);
+            const engagementRates = analytics.map(a => a.engagement_rate);
+            const followers = analytics.map(a => a.followers_count);
+
+            const options = {
+                series: [
+                    {
+                        name: 'Engagement Rate (%)',
+                        data: engagementRates
+                    },
+                    {
+                        name: 'Followers',
+                        data: followers
+                    }
+                ],
+                chart: {
+                    height: 350,
+                    type: 'line'
+                },
+                xaxis: {
+                    categories: dates
+                },
+                yaxis: [
+                    {
+                        title: { text: 'Engagement Rate (%)' }
+                    },
+                    {
+                        opposite: true,
+                        title: { text: 'Followers' }
+                    }
+                ],
+                stroke: {
+                    curve: 'smooth',
+                    width: 2
+                },
+                colors: ['#3B82F6', '#10B981']
+            };
+
+            const chart = new ApexCharts(document.getElementById('chart'), options);
+            chart.render();
+        }
+
+        // Posts Preview (first 6)
+        let postsPage = 1;
+        async function loadPostsPreview() {
+            try {
+                const response = await fetch(`/api/client/${clientId}/posts?page=1&limit=6`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                const data = await response.json();
+                const grid = document.getElementById('postsPreviewGrid');
+
+                if (!data.posts || data.posts.length === 0) {
+                    grid.innerHTML = '<p class="col-span-full text-gray-500 text-center">No posts yet</p>';
+                    document.getElementById('viewMorePostsBtn').style.display = 'none';
+                    return;
+                }
+
+                data.posts.slice(0, 6).forEach(post => {
+                    const div = createPostElement(post);
+                    grid.appendChild(div);
+                });
+
+                if (data.total <= 6) {
+                    document.getElementById('viewMorePostsBtn').style.display = 'none';
+                }
+
+            } catch (error) {
+                console.error('Posts preview error:', error);
+            }
+        }
+
+        // Stories Preview (first 6)
+        let storiesPage = 1;
+        async function loadStoriesPreview() {
+            try {
+                const response = await fetch(`/api/client/${clientId}/stories?page=1&limit=6`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                const data = await response.json();
+                const grid = document.getElementById('storiesPreviewGrid');
+
+                if (!data.stories || data.stories.length === 0) {
+                    grid.innerHTML = '<p class="col-span-full text-gray-500 text-center">No stories yet</p>';
+                    document.getElementById('viewMoreStoriesBtn').style.display = 'none';
+                    return;
+                }
+
+                data.stories.slice(0, 6).forEach(story => {
+                    const div = createStoryElement(story);
+                    grid.appendChild(div);
+                });
+
+                if (data.total <= 6) {
+                    document.getElementById('viewMoreStoriesBtn').style.display = 'none';
+                }
+
+            } catch (error) {
+                console.error('Stories preview error:', error);
+            }
+        }
+
+        // Create Post Element
+        function createPostElement(post) {
+            const div = document.createElement('div');
+            div.className = 'relative aspect-square rounded-lg overflow-hidden cursor-pointer hover:opacity-80 transition-opacity group';
+            const proxyUrl = `/proxy/image?url=${encodeURIComponent(post.thumbnail_url)}`;
+            div.innerHTML = `
+                <img src="${proxyUrl}" alt="Post" class="w-full h-full object-cover">
+                <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <p class="text-white text-xs font-medium">❤️ ${post.likes_count.toLocaleString()} 💬 ${post.comments_count.toLocaleString()}</p>
+                </div>
+            `;
+            div.onclick = () => window.open(post.post_url, '_blank');
+            return div;
+        }
+
+        // Create Story Element
+        function createStoryElement(story) {
+            const div = document.createElement('div');
+            div.className = 'relative aspect-square rounded-lg overflow-hidden cursor-pointer hover:opacity-80 transition-opacity group';
+            const proxyUrl = `/proxy/image?url=${encodeURIComponent(story.thumbnail_url)}`;
+            div.innerHTML = `
+                <img src="${proxyUrl}" alt="Story" class="w-full h-full object-cover">
+                <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <p class="text-white text-xs font-medium">👁️ ${story.views_count ? story.views_count.toLocaleString() : 'N/A'}</p>
+                </div>
+            `;
+            div.onclick = () => window.open(story.story_url, '_blank');
+            return div;
+        }
+
+        // Open Posts Modal
+        async function openPostsModal() {
+            document.getElementById('postsModal').style.display = 'flex';
+            postsPage = 1;
+            document.getElementById('postsModalGrid').innerHTML = '';
+            await loadPostsInModal();
+        }
+
+        // Close Posts Modal
+        function closePostsModal() {
+            document.getElementById('postsModal').style.display = 'none';
+        }
+
+        // Load Posts in Modal
+        async function loadPostsInModal() {
+            try {
+                const response = await fetch(`/api/client/${clientId}/posts?page=${postsPage}&limit=50`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                const data = await response.json();
+                const grid = document.getElementById('postsModalGrid');
+
+                if (postsPage === 1 && (!data.posts || data.posts.length === 0)) {
+                    grid.innerHTML = '<p class="col-span-full text-gray-500 text-center">No posts yet</p>';
+                    document.getElementById('loadMorePostsBtn').style.display = 'none';
+                    return;
+                }
+
+                // Group posts by date
+                const postsByDate = data.posts_by_date || {};
+                const dates = Object.keys(postsByDate).sort().reverse();
+
+                dates.forEach(date => {
+                    // Add date header
+                    const dateHeader = document.createElement('div');
+                    dateHeader.className = 'col-span-full mt-6 mb-3';
+                    dateHeader.innerHTML = `<h3 class="text-lg font-semibold text-gray-700">${new Date(date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</h3>`;
+                    grid.appendChild(dateHeader);
+
+                    // Add posts for this date
+                    postsByDate[date].forEach(post => {
+                        const div = createPostElement(post);
+                        grid.appendChild(div);
+                    });
+                });
+
+                // Hide load more if no more posts
+                if (data.posts.length < 50 || postsPage * 50 >= data.total) {
+                    document.getElementById('loadMorePostsBtn').style.display = 'none';
+                } else {
+                    document.getElementById('loadMorePostsBtn').style.display = 'inline-block';
+                }
+
+            } catch (error) {
+                console.error('Posts modal error:', error);
+            }
+        }
+
+        // Load More Posts
+        async function loadMorePosts() {
+            postsPage++;
+            await loadPostsInModal();
+        }
+
+        // Open Stories Modal
+        async function openStoriesModal() {
+            document.getElementById('storiesModal').style.display = 'flex';
+            storiesPage = 1;
+            document.getElementById('storiesModalGrid').innerHTML = '';
+            await loadStoriesInModal();
+        }
+
+        // Close Stories Modal
+        function closeStoriesModal() {
+            document.getElementById('storiesModal').style.display = 'none';
+        }
+
+        // Load Stories in Modal
+        async function loadStoriesInModal() {
+            try {
+                const response = await fetch(`/api/client/${clientId}/stories?page=${storiesPage}&limit=50`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                const data = await response.json();
+                const grid = document.getElementById('storiesModalGrid');
+
+                if (storiesPage === 1 && (!data.stories || data.stories.length === 0)) {
+                    grid.innerHTML = '<p class="col-span-full text-gray-500 text-center">No stories yet</p>';
+                    document.getElementById('loadMoreStoriesBtn').style.display = 'none';
+                    return;
+                }
+
+                // Group stories by date
+                const storiesByDate = data.stories_by_date || {};
+                const dates = Object.keys(storiesByDate).sort().reverse();
+
+                dates.forEach(date => {
+                    // Add date header
+                    const dateHeader = document.createElement('div');
+                    dateHeader.className = 'col-span-full mt-6 mb-3';
+                    dateHeader.innerHTML = `<h3 class="text-lg font-semibold text-gray-700">${new Date(date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</h3>`;
+                    grid.appendChild(dateHeader);
+
+                    // Add stories for this date
+                    storiesByDate[date].forEach(story => {
+                        const div = createStoryElement(story);
+                        grid.appendChild(div);
+                    });
+                });
+
+                // Hide load more if no more stories
+                if (data.stories.length < 50 || storiesPage * 50 >= data.total) {
+                    document.getElementById('loadMoreStoriesBtn').style.display = 'none';
+                } else {
+                    document.getElementById('loadMoreStoriesBtn').style.display = 'inline-block';
+                }
+
+            } catch (error) {
+                console.error('Stories modal error:', error);
+            }
+        }
+
+        // Load More Stories
+        async function loadMoreStories() {
+            storiesPage++;
+            await loadStoriesInModal();
+        }
+
+        function goBack() {
+            window.location.href = '/dashboard';
+        }
+
+        // Load data on page load
+        loadClientData();
+    </script>
+</body>
+</html>

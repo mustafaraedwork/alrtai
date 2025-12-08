@@ -1,0 +1,41 @@
+# ===============================================
+# Git Commands - انسخ والصق في Git Bash
+# ===============================================
+
+# الخطوة 1: الانتقال لمجلد المشروع
+cd /c/Users/pc/Desktop/instaanalysis
+
+# الخطوة 2: التحقق من حالة Git
+git status
+
+# الخطوة 3: إضافة جميع الملفات
+git add .
+
+# الخطوة 4: Commit
+git commit -m "Add Vercel deployment configuration and documentation"
+
+# الخطوة 5: Push إلى GitHub (main)
+git push origin main
+
+# إذا كان الفرع master (وليس main)، استخدم:
+# git push origin master
+
+# ===============================================
+# للتحديثات المستقبلية
+# ===============================================
+
+# بعد أي تعديل في الكود:
+cd /c/Users/pc/Desktop/instaanalysis
+git add .
+git commit -m "Update: وصف التحديث"
+git push origin main
+
+# ===============================================
+# إذا واجهت مشكلة
+# ===============================================
+
+# Pull أحدث التحديثات أولاً:
+git pull origin main
+
+# ثم Push:
+git push origin main

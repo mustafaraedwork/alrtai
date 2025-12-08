@@ -109,6 +109,9 @@
                 });
 
                 if (res.ok) {
+                    const data = await res.json();
+                    // Save token to localStorage
+                    localStorage.setItem('access_token', data.access_token);
                     window.location.href = "/dashboard";
                 } else {
                     throw new Error("Auth failed");

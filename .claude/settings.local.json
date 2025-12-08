@@ -2,7 +2,19 @@
   "permissions": {
     "allow": [
       "Bash(cat:*)",
-      "Bash(tree:*)"
+      "Bash(tree:*)",
+      "Bash(python generate_user_import_sql.py:*)",
+      "Bash(python:*)",
+      "Bash(ls:*)",
+      "Bash(pip install:*)",
+      "Bash(./venv/Scripts/pip install:*)",
+      "Bash(timeout 5 ./venv/Scripts/python:*)",
+      "Bash(./venv/Scripts/python:*)",
+      "Bash(wc:*)",
+      "Bash(timeout 5 python:*)",
+      "Bash(tasklist:*)",
+      "Bash(netstat:*)",
+      "Bash(taskkill:*)"
     ],
     "deny": [],
     "ask": []

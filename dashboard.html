@@ -179,7 +179,7 @@
                 </div>
                 <!-- Multi-select Lead Status Filter -->
                 <div class="relative">
-                    <button onclick="toggleLeadStatusDropdown()"
+                    <button onclick="toggleLeadStatusDropdown(event)"
                         class="border border-gray-300 rounded px-3 py-1 text-sm bg-white hover:bg-gray-50 flex items-center gap-2">
                         <span class="text-xs font-semibold text-gray-500 uppercase">Lead Status:</span>
                         <span id="leadStatusLabel" class="text-gray-700">All Selected</span>
@@ -188,7 +188,7 @@
                             </path>
                         </svg>
                     </button>
-                    <div id="leadStatusDropdown"
+                    <div id="leadStatusDropdown" onclick="event.stopPropagation()"
                         class="hidden absolute top-full left-0 mt-1 w-56 bg-white border border-gray-200 rounded-lg shadow-xl z-50 p-2">
                         <div class="flex flex-col gap-1 max-h-60 overflow-y-auto" id="leadStatusOptions">
                             <!-- Populated by JS -->
@@ -346,6 +346,138 @@
         </div>
     </div>
 
+    <!-- Target Details Modal -->
+    <div id="detailsModal" onclick="closeDetailsModal(event)"
+        class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
+        <div onclick="event.stopPropagation()"
+            class="bg-white rounded-2xl w-full max-w-4xl shadow-2xl animate-fade-in max-h-[90vh] overflow-y-auto">
+
+            <!-- Header -->
+            <div class="sticky top-0 bg-gradient-to-r from-blue-600 to-blue-700 text-white p-6 rounded-t-2xl flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <div id="detailsProfilePic"></div>
+                    <div>
+                        <h2 id="detailsUsername" class="text-2xl font-bold"></h2>
+                        <p class="text-blue-100 text-sm" id="detailsLabel"></p>
+                    </div>
+                </div>
+                <button onclick="closeDetailsModal(event)"
+                    class="text-white hover:bg-white hover:bg-opacity-20 rounded-full p-2 transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Content -->
+            <div class="p-6 space-y-6">
+
+                <!-- Status Overview -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-4 border border-purple-200">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-xs font-semibold text-purple-600 uppercase mb-1">Activity Status</p>
+                                <p id="detailsActivityStatus" class="text-2xl font-bold text-purple-900"></p>
+                            </div>
+                            <div id="detailsStatusDot"></div>
+                        </div>
+                    </div>
+
+                    <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-4 border border-blue-200">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-xs font-semibold text-blue-600 uppercase mb-1">Lead Status</p>
+                                <p id="detailsLeadStatus" class="text-lg font-bold text-blue-900"></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-4 border border-green-200">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-xs font-semibold text-green-600 uppercase mb-1">Followers</p>
+                                <p id="detailsFollowers" class="text-2xl font-bold text-green-900"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Activity Metrics -->
+                <div class="glass-panel p-5 border border-gray-200">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                        <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                        </svg>
+                        Activity Metrics
+                    </h3>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div class="text-center p-3 bg-gray-50 rounded-lg">
+                            <p class="text-xs text-gray-500 font-semibold uppercase mb-1">Days Inactive</p>
+                            <p id="detailsDaysInactive" class="text-3xl font-bold text-gray-800"></p>
+                        </div>
+                        <div class="text-center p-3 bg-gray-50 rounded-lg">
+                            <p class="text-xs text-gray-500 font-semibold uppercase mb-1">Avg Interval</p>
+                            <p id="detailsAvgInterval" class="text-3xl font-bold text-gray-800"></p>
+                        </div>
+                        <div class="text-center p-3 bg-gray-50 rounded-lg">
+                            <p class="text-xs text-gray-500 font-semibold uppercase mb-1">Last Post</p>
+                            <p id="detailsLastPost" class="text-lg font-bold text-gray-800"></p>
+                        </div>
+                        <div class="text-center p-3 bg-gray-50 rounded-lg">
+                            <p class="text-xs text-gray-500 font-semibold uppercase mb-1">Added On</p>
+                            <p id="detailsCreatedAt" class="text-lg font-bold text-gray-800"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Facebook Ads Section -->
+                <div class="glass-panel p-5 border border-gray-200" id="detailsAdsSection">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                        <svg class="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                        </svg>
+                        Facebook Ads
+                    </h3>
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-gray-600 mb-2">Ad Status: <span id="detailsAdsStatus" class="font-bold"></span></p>
+                            <p id="detailsFbUrl" class="text-sm text-blue-600 hover:underline"></p>
+                        </div>
+                        <div id="detailsAdsCount" class="text-4xl font-bold"></div>
+                    </div>
+                </div>
+
+                <!-- Notes Section -->
+                <div class="glass-panel p-5 border border-gray-200">
+                    <h3 class="text-lg font-bold text-gray-800 mb-3 flex items-center gap-2">
+                        <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                        </svg>
+                        Notes
+                    </h3>
+                    <div id="detailsNotes" class="text-gray-700 bg-gray-50 p-4 rounded-lg min-h-[80px] whitespace-pre-wrap"></div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="flex gap-3 justify-end pt-4 border-t border-gray-200">
+                    <a id="detailsInstagramLink" target="_blank"
+                        class="px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-semibold rounded-lg text-sm transition-all shadow-md">
+                        View on Instagram
+                    </a>
+                    <a id="detailsPostLink" target="_blank"
+                        class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg text-sm transition-colors">
+                        View Last Post
+                    </a>
+                    <button onclick="openEditModalFromDetails()"
+                        class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white font-semibold rounded-lg text-sm transition-colors">
+                        Edit Details
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         let allClients = [];
         let currentSort = { key: 'created_at', order: 'desc' };
@@ -359,11 +491,27 @@
             'CLIENT': 'Client', 'NOT_INTERESTED': 'Not Interested'
         };
 
+        // Helper to get auth headers
+        function getAuthHeaders() {
+            const token = localStorage.getItem('access_token');
+            if (!token) {
+                window.location.href = '/login';
+                return null;
+            }
+            return {
+                'Authorization': `Bearer ${token}`
+            };
+        }
+
         // Auth Check
         async function checkAuth() {
             try {
-                const res = await fetch('/api/me');
+                const headers = getAuthHeaders();
+                if (!headers) return false;
+
+                const res = await fetch('/api/me', { headers });
                 if (res.status === 401) {
+                    localStorage.removeItem('access_token');
                     window.location.href = '/login';
                     return false;
                 }
@@ -377,14 +525,25 @@
         }
 
         async function logout() {
-            await fetch('/logout');
+            const headers = getAuthHeaders();
+            if (headers) {
+                await fetch('/logout', {
+                    method: 'POST',
+                    headers
+                });
+            }
+            localStorage.removeItem('access_token');
             window.location.href = '/login';
         }
 
-        async function loadDashboard() {
+        async function loadDashboard_internal() {
             try {
-                const res = await fetch('/data/dashboard');
+                const headers = getAuthHeaders();
+                if (!headers) return;
+
+                const res = await fetch('/data/dashboard', { headers });
                 if (res.status === 401) {
+                    localStorage.removeItem('access_token');
                     window.location.href = '/login';
                     return;
                 }
@@ -392,10 +551,6 @@
                 allClients = data.clients_list;
                 renderStats(data.stats);
                 applyFilters();
-                const hasActive = data.clients_list.some(c => ['queued', 'processing'].includes(c.last_check_status));
-                const hasPending = data.clients_list.some(c => c.last_check_status === 'pending');
-                const interval = (hasActive || hasPending) ? 5000 : 30000;
-                setTimeout(loadDashboard, interval);
             } catch (e) {
                 console.error("Load Error", e);
             }
@@ -411,6 +566,7 @@
 
         // --- Lead Status Filter Logic ---
         let selectedLeadStatuses = [];
+        let leadStatusListenerAdded = false; // Flag to prevent duplicate listeners
 
         function initializeLeadStatusFilter() {
             const container = document.getElementById('leadStatusOptions');
@@ -426,18 +582,39 @@
             `).join('');
             updateLeadStatusLabel();
 
-            // Close dropdown when clicking outside
-            document.addEventListener('click', function (event) {
-                const dropdown = document.getElementById('leadStatusDropdown');
-                const button = document.getElementById('leadStatusLabel').parentElement;
-                if (!dropdown.contains(event.target) && !button.contains(event.target)) {
-                    dropdown.classList.add('hidden');
-                }
-            });
+            // Close dropdown when clicking outside (add only once)
+            if (!leadStatusListenerAdded) {
+                leadStatusListenerAdded = true;
+                document.addEventListener('click', function (event) {
+                    const dropdown = document.getElementById('leadStatusDropdown');
+
+                    // Check if click is inside dropdown
+                    const isInsideDropdown = dropdown && dropdown.contains(event.target);
+
+                    // Check if click is on the toggle button (check parent elements)
+                    let element = event.target;
+                    let isToggleButton = false;
+                    while (element && element !== document) {
+                        if (element.hasAttribute && element.hasAttribute('onclick') &&
+                            element.getAttribute('onclick').includes('toggleLeadStatusDropdown')) {
+                            isToggleButton = true;
+                            break;
+                        }
+                        element = element.parentElement;
+                    }
+
+                    // If click is outside dropdown and not on button, close it
+                    if (!isInsideDropdown && !isToggleButton) {
+                        if (dropdown) dropdown.classList.add('hidden');
+                    }
+                });
+            }
         }
 
-        function toggleLeadStatusDropdown() {
-            document.getElementById('leadStatusDropdown').classList.toggle('hidden');
+        function toggleLeadStatusDropdown(event) {
+            event.stopPropagation(); // Prevent immediate closing
+            const dropdown = document.getElementById('leadStatusDropdown');
+            dropdown.classList.toggle('hidden');
         }
 
         function toggleLeadStatus(status) {
@@ -539,10 +716,10 @@
 
         function renderStats(stats) {
             const items = [
-                { label: 'Total Tracked', val: stats.total_tracked, color: 'blue' },
-                { label: 'Opportunities (Green)', val: stats.green_opportunities, color: 'green' },
-                { label: 'Warnings (Yellow)', val: stats.yellow_warnings, color: 'yellow' },
-                { label: 'Queued Jobs', val: document.getElementById('queuedCount')?.innerText || '0', color: 'gray' }
+                { label: 'Total Tracked', val: stats.total_tracked || 0, color: 'blue' },
+                { label: 'Opportunities (Green)', val: stats.green || 0, color: 'green' },
+                { label: 'Warnings (Yellow)', val: stats.yellow || 0, color: 'yellow' },
+                { label: 'Queued Jobs', val: stats.queue_size || 0, color: 'gray' }
             ];
 
             document.getElementById('statsGrid').innerHTML = items.map(i =>
@@ -557,9 +734,12 @@
         async function updateLeadStatus(username, newStatus) {
             const client = allClients.find(c => c.username === username);
             if (client) client.lead_status = newStatus;
+            const authHeaders = getAuthHeaders();
+            if (!authHeaders) return;
             await fetch('/update_client_crm', {
-                method: 'PUT', headers: { 'Content-Type': 'application/json' }, body:
-                    JSON.stringify({ username: username, lead_status: newStatus })
+                method: 'PUT',
+                headers: { ...authHeaders, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: username, lead_status: newStatus })
             });
             applyFilters();
         }
@@ -585,13 +765,23 @@
                 if (client.last_check_status === 'failed') statusHtml = `<span
             class="text-red-500 text-xs font-bold" title="${client.last_error_message || 'Error'}">ERR</span>`;
                 let adsHtml = '';
-                if (client.ads_status === 'ACTIVE') adsHtml = `<div class="flex items-center gap-2"><span
-                class="text-green-600 font-bold text-xs">✓ Active (${client.ads_count || 0})</span></div>`;
-                else if (client.ads_status === 'INACTIVE') adsHtml = `<div class="flex items-center gap-2"><span
-                class="text-red-500 font-bold text-xs">✕ 0 Ads</span></div>`;
-                else if (client.ads_status === 'CHECKING...') adsHtml = `<div class="flex items-center gap-2"><div class="spinner" style="width:12px;height:12px;border-width:2px;border-top-color:#3b82f6;"></div> <span class="text-xs text-gray-500">Checking...</span></div>`;
-                else adsHtml = `<span class="text-blue-500 hover:underline text-xs cursor-pointer"
+                if (client.ads_status === 'ACTIVE') {
+                    // Green "RUN X ADS"
+                    adsHtml = `<div class="flex items-center gap-1"><span class="bg-green-500 text-white font-bold text-xs px-2 py-1 rounded">RUN ${client.ads_count || 0} AD${client.ads_count > 1 ? 'S' : ''}</span></div>`;
+                }
+                else if (client.ads_status === 'INACTIVE') {
+                    // Red "NO ADS"
+                    adsHtml = `<div class="flex items-center gap-1"><span class="bg-red-500 text-white font-bold text-xs px-2 py-1 rounded">NO ADS</span></div>`;
+                }
+                else if (client.ads_status === 'CHECKING...') {
+                    // Spinner while checking
+                    adsHtml = `<div class="flex items-center gap-2"><div class="spinner" style="width:14px;height:14px;border-width:2px;border-top-color:#3b82f6;"></div></div>`;
+                }
+                else {
+                    // Show "Link FB" button
+                    adsHtml = `<span class="text-blue-500 hover:underline text-xs cursor-pointer font-semibold"
             onclick="openFbModal('${client.username}')">Link FB</span>`;
+                }
                 const currentStatus = client.lead_status || 'NEW_LEAD';
                 const statusColor = STATUS_COLORS[currentStatus] || STATUS_COLORS['NEW_LEAD'];
                 const optionsHtml = Object.keys(STATUS_LABELS).map(k => `<option value="${k}" ${k === currentStatus ? 'selected'
@@ -605,16 +795,24 @@
                     notesDisplay = `<div class="tooltip text-xs text-gray-700">${truncated}<span
                 class="tooltiptext">${fullNotes}</span></div>`;
                 }
+                // Profile Picture HTML - Use proxy to bypass CORS
+                const profilePicHtml = client.profile_pic_url
+                    ? `<img src="https://images.weserv.nl/?url=${encodeURIComponent(client.profile_pic_url)}&w=80&h=80&fit=cover&mask=circle" alt="${client.username}" class="w-10 h-10 rounded-full object-cover border-2 border-gray-200" onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\\'w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 text-xs font-bold border-2 border-gray-300\\'>${client.username.substring(0,2).toUpperCase()}</div>'">`
+                    : `<div class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 text-xs font-bold border-2 border-gray-300">${client.username.substring(0,2).toUpperCase()}</div>`;
+
                 return `<tr class="hover:bg-gray-50 transition-colors group">
             <td class="px-4 py-4">${statusHtml}</td>
             <td class="px-4 py-4">
-                <div class="flex flex-col">
-                    <a href="https://instagram.com/${client.username}" target="_blank"
-                        class="font-bold text-gray-900 hover:text-blue-600 text-sm">@${client.username}</a>
-                    ${client.custom_label
-                        ? `<span class="text-xs text-gray-500 hover:text-blue-600 cursor-pointer" onclick="openEditModal('${client.username}')" title="Edit Tag">🏷️ ${client.custom_label}</span>`
-                        : `<span class="text-[10px] text-blue-400 hover:text-blue-600 cursor-pointer font-medium" onclick="openEditModal('${client.username}')">+ Add Tag</span>`
-                    }
+                <div class="flex items-center gap-3">
+                    ${profilePicHtml}
+                    <div class="flex flex-col">
+                        <span onclick="openDetailsModal('${client.username}')"
+                            class="font-bold text-gray-900 hover:text-blue-600 text-sm cursor-pointer">@${client.username}</span>
+                        ${client.custom_label
+                            ? `<span class="text-xs text-gray-500 hover:text-blue-600 cursor-pointer" onclick="openEditModal('${client.username}')" title="Edit Tag">🏷️ ${client.custom_label}</span>`
+                            : `<span class="text-[10px] text-blue-400 hover:text-blue-600 cursor-pointer font-medium" onclick="openEditModal('${client.username}')">+ Add Tag</span>`
+                        }
+                    </div>
                 </div>
             </td>
             <td class="px-4 py-4">${statusDropdown}</td>
@@ -629,12 +827,16 @@
             <td class="px-4 py-4 text-xs text-gray-500" title="Last Crawl: ${client.last_check_date ? new Date(client.last_check_date).toLocaleString() : 'Never'}">${client.last_post_date || '-'}</td>
             <td class="px-4 py-4 text-xs text-gray-400">${client.created_at ? new
                         Date(client.created_at).toLocaleDateString('en-GB') : '-'}</td>
-            <td class="px-4 py-4 text-right"><button onclick="openEditModal('${client.username}')"
-                    class="text-gray-500 hover:text-gray-700 mr-2 text-xs font-semibold">EDIT</button><button
-                    onclick="refreshTarget('${client.username}')"
-                    class="text-blue-500 hover:text-blue-700 mr-2 text-xs font-semibold">CHK</button><button
-                    onclick="deleteTarget('${client.username}')"
-                    class="text-red-400 hover:text-red-600 text-xs font-semibold">DEL</button></td>
+            <td class="px-4 py-4 text-right">
+                <button onclick="window.location.href='/client.html?id=${client.id}'"
+                    class="text-purple-500 hover:text-purple-700 mr-2 text-xs font-semibold" title="View Analytics & Archive">📊</button>
+                <button onclick="openEditModal('${client.username}')"
+                    class="text-gray-500 hover:text-gray-700 mr-2 text-xs font-semibold">EDIT</button>
+                <button onclick="refreshTarget('${client.username}')"
+                    class="text-blue-500 hover:text-blue-700 mr-2 text-xs font-semibold">CHK</button>
+                <button onclick="deleteTarget(${client.id}, '${client.username}')"
+                    class="text-red-400 hover:text-red-600 text-xs font-semibold">DEL</button>
+            </td>
         </tr>`;
             }).join('');
         }
@@ -648,12 +850,14 @@
                     'NEW_LEAD', custom_label: '', created_at: new Date().toISOString()
             };
             allClients.unshift(optimisticClient); applyFilters(); input.value = '';
-            await fetch(`/add_target?username=${username}`, { method: 'POST' }); loadDashboard();
+            const headers = getAuthHeaders();
+            if (!headers) return;
+            await fetch(`/add_target?username=${username}`, { method: 'POST', headers }); loadDashboard();
         }
         let targetToDelete = null;
 
-        function deleteTarget(username) {
-            targetToDelete = username;
+        function deleteTarget(clientId, username) {
+            targetToDelete = clientId;
             document.getElementById('deleteTargetName').innerText = `@${username}`;
             document.getElementById('deleteModal').classList.remove('hidden');
         }
@@ -665,14 +869,19 @@
 
         async function confirmDelete() {
             if (!targetToDelete) return;
-            const username = targetToDelete;
+            const clientId = targetToDelete;
             closeDeleteModal();
 
             // Optimistic removal
-            const row = [...document.querySelectorAll('tr')].find(tr => tr.innerHTML.includes(username));
-            if (row) row.style.opacity = '0.5';
+            const client = allClients.find(c => c.id === clientId);
+            if (client) {
+                const row = [...document.querySelectorAll('tr')].find(tr => tr.innerHTML.includes(client.username));
+                if (row) row.style.opacity = '0.5';
+            }
 
-            await fetch(`/delete_target?username=${username}`, { method: 'DELETE' });
+            const headers = getAuthHeaders();
+            if (!headers) return;
+            await fetch(`/remove_target/${clientId}`, { method: 'DELETE', headers });
             loadDashboard();
         }
         async function refreshTarget(username) {
@@ -724,14 +933,24 @@
             btn.disabled = true;
 
             try {
+                const authHeaders = getAuthHeaders();
+                if (!authHeaders) return;
+
+                // Immediately refresh to show new accounts with pending status
+                setTimeout(() => loadDashboard(), 500);
+
                 const res = await fetch('/bulk_add_targets', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { ...authHeaders, 'Content-Type': 'application/json' },
                     body: JSON.stringify({ usernames: usernames })
                 });
                 const result = await res.json();
+
+                // Show success message
                 alert(result.message);
-                loadDashboard();
+
+                // Refresh immediately to show all added accounts
+                await loadDashboard();
             } catch (e) {
                 alert("Import failed: " + e);
             } finally {
@@ -763,14 +982,14 @@
                 client.custom_label = label; client.facebook_page_url = fbUrl; client.lead_status = status;
                 client.notes = notes; if (fbUrl && !client.ads_status) client.ads_status = "CHECKING..."; applyFilters();
             }
-            const p1 = fetch(`/update_label?username=${username}&label=${encodeURIComponent(label)}`, { method: 'PUT' });
-            let p2 = Promise.resolve(); if (fbUrl) p2 =
-                fetch(`/link_facebook?username=${username}&fb_url=${encodeURIComponent(fbUrl)}`, { method: 'PUT' });
+            const authHeaders = getAuthHeaders();
+            if (!authHeaders) return;
             const p3 = fetch('/update_client_crm', {
-                method: 'PUT', headers: { 'Content-Type': 'application/json' }, body:
-                    JSON.stringify({ username: username, lead_status: status, notes: notes })
+                method: 'PUT',
+                headers: { ...authHeaders, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: username, lead_status: status, notes: notes, custom_label: label, facebook_page_url: fbUrl })
             });
-            await Promise.all([p1, p2, p3]); loadDashboard();
+            await p3; loadDashboard();
         }
         function openFbModal(username) {
             document.getElementById('fbTargetUsername').value = username;
@@ -788,15 +1007,179 @@
             // Optimistic update
             const client = allClients.find(c => c.username === username);
             if (client) {
+                client.facebook_page_url = inputVal;
                 client.ads_status = 'CHECKING...';
-                applyFilters(); // Re-render table immediately
+                applyFilters(); // Re-render table immediately with spinner
             }
 
-            await fetch(`/link_facebook?username=${username}&fb_url=${encodeURIComponent(inputVal)}`, { method: 'PUT' });
-            loadDashboard();
+            const headers = getAuthHeaders();
+            if (!headers) return;
+            await fetch(`/link_facebook?username=${username}&fb_url=${encodeURIComponent(inputVal)}`, { method: 'PUT', headers });
+
+            // Refresh dashboard after ads check completes
+            setTimeout(() => loadDashboard(), 2000); // Give time for ads check to start
         }
 
-        loadDashboard();
+        // Smart auto-refresh: only when there are pending operations
+        let refreshInterval = null;
+
+        function startAutoRefresh() {
+            // Only start if not already running
+            if (!refreshInterval) {
+                refreshInterval = setInterval(() => {
+                    // Check if there are any pending operations
+                    const hasPending = allClients.some(c =>
+                        c.last_check_status === 'pending' ||
+                        c.last_check_status === 'queued' ||
+                        c.last_check_status === 'processing' ||
+                        c.ads_status === 'CHECKING...'
+                    );
+
+                    if (hasPending) {
+                        loadDashboard_internal();
+                    } else {
+                        // Stop refreshing if nothing is pending
+                        stopAutoRefresh();
+                    }
+                }, 3000); // Check every 3 seconds
+            }
+        }
+
+        function stopAutoRefresh() {
+            if (refreshInterval) {
+                clearInterval(refreshInterval);
+                refreshInterval = null;
+            }
+        }
+
+        // Main loadDashboard function with auto-refresh logic
+        async function loadDashboard() {
+            await loadDashboard_internal();
+
+            // Check if we need auto-refresh
+            const hasPending = allClients.some(c =>
+                c.last_check_status === 'pending' ||
+                c.last_check_status === 'queued' ||
+                c.last_check_status === 'processing' ||
+                c.ads_status === 'CHECKING...'
+            );
+
+            if (hasPending) {
+                startAutoRefresh();
+            } else {
+                stopAutoRefresh();
+            }
+        }
+
+        // --- TARGET DETAILS MODAL ---
+        let currentDetailsUsername = null;
+
+        function openDetailsModal(username) {
+            const client = allClients.find(c => c.username === username);
+            if (!client) return;
+
+            currentDetailsUsername = username;
+
+            // Profile Picture
+            const profilePicHtml = client.profile_pic_url
+                ? `<img src="https://images.weserv.nl/?url=${encodeURIComponent(client.profile_pic_url)}&w=100&h=100&fit=cover&mask=circle" alt="${client.username}" class="w-20 h-20 rounded-full object-cover border-4 border-white shadow-lg" onerror="this.onerror=null; this.outerHTML='<div class=\\'w-20 h-20 rounded-full bg-white flex items-center justify-center text-blue-600 text-2xl font-bold border-4 border-white shadow-lg\\'>${client.username.substring(0,2).toUpperCase()}</div>'">`
+                : `<div class="w-20 h-20 rounded-full bg-white flex items-center justify-center text-blue-600 text-2xl font-bold border-4 border-white shadow-lg">${client.username.substring(0,2).toUpperCase()}</div>`;
+
+            document.getElementById('detailsProfilePic').innerHTML = profilePicHtml;
+
+            // Username and Label
+            document.getElementById('detailsUsername').innerText = `@${client.username}`;
+            document.getElementById('detailsLabel').innerText = client.custom_label || 'No label assigned';
+
+            // Activity Status
+            const statusMap = {
+                'GREEN': { text: 'Opportunity', color: 'text-green-600' },
+                'YELLOW': { text: 'Warning', color: 'text-yellow-600' },
+                'RED': { text: 'Active', color: 'text-gray-600' },
+                'GREY': { text: 'Unknown', color: 'text-gray-400' }
+            };
+            const status = statusMap[client.status_signal] || statusMap['GREY'];
+            document.getElementById('detailsActivityStatus').innerText = status.text;
+            document.getElementById('detailsActivityStatus').className = `text-2xl font-bold ${status.color}`;
+
+            // Status Dot
+            let statusDotClass = 'status-grey';
+            if (client.status_signal === 'GREEN') statusDotClass = 'status-green';
+            if (client.status_signal === 'YELLOW') statusDotClass = 'status-yellow';
+            if (client.status_signal === 'RED') statusDotClass = 'status-grey';
+            document.getElementById('detailsStatusDot').innerHTML = `<span class="status-dot ${statusDotClass}" style="width: 24px; height: 24px;"></span>`;
+
+            // Lead Status
+            document.getElementById('detailsLeadStatus').innerText = STATUS_LABELS[client.lead_status] || 'New Lead';
+
+            // Followers
+            document.getElementById('detailsFollowers').innerText = (client.followers_count || 0).toLocaleString();
+
+            // Activity Metrics
+            document.getElementById('detailsDaysInactive').innerText = `${client.days_inactive || 0}d`;
+            document.getElementById('detailsAvgInterval').innerText = `${client.avg_posting_interval || 0}d`;
+            document.getElementById('detailsLastPost').innerText = client.last_post_date || 'Never';
+            document.getElementById('detailsCreatedAt').innerText = client.created_at ? new Date(client.created_at).toLocaleDateString('en-GB') : '-';
+
+            // Facebook Ads
+            if (client.facebook_page_url) {
+                document.getElementById('detailsAdsSection').classList.remove('hidden');
+                document.getElementById('detailsAdsStatus').innerText = client.ads_status || 'Unknown';
+
+                if (client.ads_status === 'ACTIVE') {
+                    document.getElementById('detailsAdsStatus').className = 'font-bold text-green-600';
+                    document.getElementById('detailsAdsCount').innerHTML = `<span class="text-green-600">${client.ads_count || 0}</span>`;
+                } else if (client.ads_status === 'INACTIVE') {
+                    document.getElementById('detailsAdsStatus').className = 'font-bold text-red-600';
+                    document.getElementById('detailsAdsCount').innerHTML = `<span class="text-red-600">0</span>`;
+                } else {
+                    document.getElementById('detailsAdsStatus').className = 'font-bold text-gray-600';
+                    document.getElementById('detailsAdsCount').innerHTML = `<span class="text-gray-400">-</span>`;
+                }
+
+                const fbUrlShort = client.facebook_page_url.length > 50
+                    ? client.facebook_page_url.substring(0, 50) + '...'
+                    : client.facebook_page_url;
+                document.getElementById('detailsFbUrl').innerHTML = `<a href="${client.facebook_page_url}" target="_blank">${fbUrlShort}</a>`;
+            } else {
+                document.getElementById('detailsAdsSection').classList.add('hidden');
+            }
+
+            // Notes
+            document.getElementById('detailsNotes').innerText = client.notes || 'No notes added yet.';
+
+            // Links
+            document.getElementById('detailsInstagramLink').href = `https://instagram.com/${client.username}`;
+            document.getElementById('detailsPostLink').href = client.post_url || `https://instagram.com/${client.username}`;
+
+            // Show modal
+            document.getElementById('detailsModal').classList.remove('hidden');
+        }
+
+        function closeDetailsModal(event) {
+            if (event) {
+                event.stopPropagation();
+            }
+            document.getElementById('detailsModal').classList.add('hidden');
+            currentDetailsUsername = null;
+        }
+
+        function openEditModalFromDetails() {
+            if (currentDetailsUsername) {
+                closeDetailsModal();
+                openEditModal(currentDetailsUsername);
+            }
+        }
+
+        // Close modal with Escape key
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                const detailsModal = document.getElementById('detailsModal');
+                if (detailsModal && !detailsModal.classList.contains('hidden')) {
+                    closeDetailsModal();
+                }
+            }
+        });
     </script>
 </body>
 
